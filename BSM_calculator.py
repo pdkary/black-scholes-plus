@@ -17,6 +17,33 @@ def get_time_to_expiry(maturity):
     days_to_exp = date_to_exp.days
     return days_to_exp
 
+def get_annualization_factor(interval):
+    hours_per_day = 8
+    days_per_year = 252
+    if interval=='1m':
+        return days_per_year*hours_per_day*60
+    elif interval=='2m':
+        return days_per_year*hours_per_day*30
+    elif interval=='5m':
+        return days_per_year*hours_per_day*12
+    elif interval=='30m':
+        return days_per_year*hours_per_day*2
+    elif interval=='60m':
+        return days_per_year*hours_per_day
+    elif interval=='90m':
+        return days_per_year*hours_per_day*2/3
+    elif interval=='1h':
+        return days_per_year*hours_per_day
+    elif interval=='1d':
+        return days_per_year
+    elif interval=='5d':
+        return days_per_year/5
+    elif interval=='1wk':
+        return days_per_year/7
+    elif interval=='1mo':
+        return 12
+    elif interval=='3mo':
+        return 4
 
 class BSM_Calculator:
     def __init__(self, tickers, period='1mo', interval='1h'):
@@ -78,7 +105,8 @@ class BSM_Calculator:
         standard_deviation = np.std(per_change)
 
         # # Annualized standard dev
-        annual_std = standard_deviation * (252 ** 0.5)
+
+        annual_std = standard_deviation * np.sqrt(get_annualization_factor(self.interval))
         annual_std.index = annual_std.index.map(
             lambda x: x.replace("_Close", ""))
         return annual_std
@@ -102,17 +130,18 @@ class BSM_Calculator:
         bsm_data["Put value"] = bsm_put_value[self.tickers]
         bsm_data["Strike Price"] = strike_map.values()
         bsm_data["Annual Volatility"] = vol[self.tickers]
-        return(bsm_data.transpose())
+        return(bsm_data.transpose().round(4))
 
 
 if __name__ == '__main__':
-    tickers = ['GOOG', 'AAPL', 'AMZN', 'IBM']
-    strike_map = {'GOOG':1200,'AAPL':130,'AMZN':2000,'IBM':120}
+    tickers = ['IYZ', 'AAPL', 'AMD', 'AMGN', 'AMZN', 'BCE', 'CSCO', 'FB','GOOG', 'IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP', 'VZ']
+    strike_map = {'IYZ':50,'AAPL':200,'AMD':120,'AMGN':400,'AMZN':3600,'BCE':60,'CSCO':60,'FB':300,'GOOG':2200,'IBM':150,'INTC':70,'MSFT':300,'MU':100,'NFLX':600,'NVDA':650,'SHOP':1750,'VZ':75}
 
-    bsmc = BSM_Calculator(tickers)
-    bsmc_data = bsmc.bsm_calculation(strike_map,'2021-03-14',0,0)
-    call_df,put_df = bsmc.load_option_data('2021-03-05',strike_map)
-    
+    expiration_date = "2021-03-19"
+    bsmc = BSM_Calculator(tickers,interval='1d')
+    bsmc_data = bsmc.bsm_calculation(strike_map,expiration_date,0.012,0)
+    call_df,put_df = bsmc.load_option_data(expiration_date,strike_map)
+
     print("------------------------------------BSMC DATA------------------------------------")
     print(bsmc_data)
     print("-----------------------------------RECENT CALLS---------------------------------")
