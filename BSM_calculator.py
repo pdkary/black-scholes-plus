@@ -136,21 +136,37 @@ class BSM_Calculator:
         bsm_data = pd.DataFrame()
         bsm_data["Call value"] = bsm_call_value[self.tickers]
         bsm_data["Put value"] = bsm_put_value[self.tickers]
-        bsm_data["Strike Price"] = strike_map.values()
         bsm_data["Annual Volatility"] = vol[self.tickers]
         return bsm_data.round(4)
 
+    def get_report(self,expiration_date,strike_map,rfr,div_yield):
+        option_df = self.load_option_data(expiration_date,strike_map)
+        bsmc_data = self.bsm_calculation(strike_map,expiration_date,rfr,div_yield)
+
+        symbols = option_df['contractSymbol']
+        types = option_df['type']
+
+        def get_val(symbol,type):
+            if type=="CALL":
+                return bsmc_data["Call value"][symbol]
+            elif type=="PUT":
+                return bsmc_data["Put value"][symbol]
+
+        option_df["BSM Value"] = np.vectorize(get_val)(symbols,types)
+        option_df["Annual Volatility"] = symbols.apply(lambda x: bsmc_data["Annual Volatility"][x])
+
+        cols = option_df.columns.tolist()
+        cols = cols[0:3] + cols[-2:-1] + cols[3:-2] + cols[-1:]
+
+        return option_df[cols]
 
 if __name__ == '__main__':
     tickers = ['IYZ', 'AAPL', 'AMD', 'AMGN', 'AMZN', 'BCE', 'CSCO', 'FB','GOOG', 'IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP', 'VZ']
     strike_map = {'IYZ':50,'AAPL':200,'AMD':120,'AMGN':400,'AMZN':3600,'BCE':60,'CSCO':60,'FB':300,'GOOG':2200,'IBM':150,'INTC':70,'MSFT':300,'MU':100,'NFLX':600,'NVDA':650,'SHOP':1750,'VZ':75}
 
     expiration_date = "2021-03-19"
-    bsmc = BSM_Calculator(tickers,interval='5m')
-    bsmc_data = bsmc.bsm_calculation(strike_map,expiration_date,0.012,0)
-    option_df = bsmc.load_option_data(expiration_date,strike_map)
+    bsmc = BSM_Calculator(tickers,interval='1h')
+    bsmc_data = bsmc.get_report(expiration_date,strike_map,0.012,0)
 
     print("------------------------------------BSMC DATA------------------------------------")
     print(bsmc_data)
-    print("----------------------------------RECENT TRADES----------------------------------")
-    print(option_df)
