@@ -137,7 +137,7 @@ class BSM_Calculator:
         bsm_data["Call value"] = bsm_call_value[self.tickers]
         bsm_data["Put value"] = bsm_put_value[self.tickers]
         bsm_data["Annual Volatility"] = vol[self.tickers]
-        return bsm_data.round(4)
+        return bsm_data
 
     def get_report(self,expiration_date,strike_map,rfr,div_yield):
         option_df = self.load_option_data(expiration_date,strike_map)
@@ -152,13 +152,13 @@ class BSM_Calculator:
             elif type=="PUT":
                 return bsmc_data["Put value"][symbol]
 
-        option_df["BSM Value"] = np.vectorize(get_val)(symbols,types)
+        option_df["BSM Value"] = np.vectorize(get_val)(symbols,types).round(2)
         option_df["Annual Volatility"] = symbols.apply(lambda x: bsmc_data["Annual Volatility"][x])
 
         cols = option_df.columns.tolist()
         cols = cols[0:3] + cols[-2:-1] + cols[3:-2] + cols[-1:]
 
-        return option_df[cols]
+        return option_df[cols].round(4)
 
 if __name__ == '__main__':
     tickers = ['IYZ', 'AAPL', 'AMD', 'AMGN', 'AMZN', 'BCE', 'CSCO', 'FB','GOOG', 'IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP', 'VZ']
@@ -168,5 +168,6 @@ if __name__ == '__main__':
     bsmc = BSM_Calculator(tickers,interval='1h')
     bsmc_data = bsmc.get_report(expiration_date,strike_map,0.012,0)
 
-    print("------------------------------------BSMC DATA------------------------------------")
+    print("-"*56+ "BSMC DATA"+"-"*56)
     print(bsmc_data)
+    print("-"*(56*2+9))
