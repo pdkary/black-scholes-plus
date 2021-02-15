@@ -3,7 +3,7 @@ import yfinance as yf
 import numpy as np
 from datetime import datetime
 from scipy.stats import norm
-
+import re
 
 def get_time_to_expiry(maturity):
     # Today's date
@@ -63,24 +63,32 @@ class BSM_Calculator:
         return spot_data
 
     def load_option_data(self, expiration_date,strike_map):
+        first_digit_regex = r'(^[^\d]+)'
         option_chains = {t: yf.Ticker(t).option_chain(expiration_date) for t in self.tickers}
-        call_df = pd.DataFrame(columns=['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility'])
-        put_df = pd.DataFrame(columns=['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility'])
+        option_df = pd.DataFrame()
+
         for t in self.tickers:
             call_chain = option_chains[t].calls
             call_row = call_chain.loc[call_chain['strike']==strike_map[t]]
             call_row = call_row[['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility']]
-            
+            call_row['contractSymbol'] = call_row['contractSymbol'].apply(lambda x: x[0:x.index('2')])
+            call_row['type'] = ['CALL' for i in range(len(call_row['bid']))]
+
             put_chain = option_chains[t].puts
             put_row = put_chain.loc[put_chain['strike']==strike_map[t]]
             put_row = put_row[['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility']]
-            
+            put_row['contractSymbol'] = put_row['contractSymbol'].apply(lambda x: x[0:x.index('2')])
+            put_row['type'] = ['PUT' for i in range(len(put_row['bid']))]
+
             if not call_row.empty:
-                call_df = call_df.append(call_row)
+                option_df = option_df.append(call_row)
             if not put_row.empty:
-                put_df = put_df.append(put_row)
+                option_df = option_df.append(put_row)
         
-        return call_df,put_df
+        option_df = option_df.reset_index(drop=True)
+        cols = option_df.columns.tolist()
+        cols = [cols[0],cols[-1]] + cols[1:-1]
+        return option_df[cols]
         
     def refresh(self):
         self.ticker_data = self.load_data()
@@ -130,7 +138,7 @@ class BSM_Calculator:
         bsm_data["Put value"] = bsm_put_value[self.tickers]
         bsm_data["Strike Price"] = strike_map.values()
         bsm_data["Annual Volatility"] = vol[self.tickers]
-        return(bsm_data.transpose().round(4))
+        return bsm_data.round(4)
 
 
 if __name__ == '__main__':
@@ -138,13 +146,11 @@ if __name__ == '__main__':
     strike_map = {'IYZ':50,'AAPL':200,'AMD':120,'AMGN':400,'AMZN':3600,'BCE':60,'CSCO':60,'FB':300,'GOOG':2200,'IBM':150,'INTC':70,'MSFT':300,'MU':100,'NFLX':600,'NVDA':650,'SHOP':1750,'VZ':75}
 
     expiration_date = "2021-03-19"
-    bsmc = BSM_Calculator(tickers,interval='1d')
+    bsmc = BSM_Calculator(tickers,interval='5m')
     bsmc_data = bsmc.bsm_calculation(strike_map,expiration_date,0.012,0)
-    call_df,put_df = bsmc.load_option_data(expiration_date,strike_map)
+    option_df = bsmc.load_option_data(expiration_date,strike_map)
 
     print("------------------------------------BSMC DATA------------------------------------")
     print(bsmc_data)
-    print("-----------------------------------RECENT CALLS---------------------------------")
-    print(call_df)
-    print("-----------------------------------RECENT PUTS----------------------------------")
-    print(put_df)
+    print("----------------------------------RECENT TRADES----------------------------------")
+    print(option_df)
