@@ -56,13 +56,16 @@ def bsm_calculation(flag_call_put,
     # Convert time to expiration from years to day
     time_to_exp = time_to_exp / 365
     # Partial Diff Equ -BSM
-    d1 = (log(float(spot) / strike) + ((rfr - div_yield) + vol * vol / 2.) * time_to_exp) / (vol * sqrt(time_to_exp))
+    d1 = (log(float(spot) / strike) + ((rfr - div_yield) + vol *
+                                       vol / 2.) * time_to_exp) / (vol * sqrt(time_to_exp))
     d2 = d1 - vol * sqrt(time_to_exp)
     # Calculate euro call price
-    bsm_call = spot * exp(-div_yield * time_to_exp) * norm.cdf(d1) - strike * exp(-rfr * time_to_exp) * norm.cdf(d2)
+    bsm_call = spot * exp(-div_yield * time_to_exp) * norm.cdf(d1) - \
+        strike * exp(-rfr * time_to_exp) * norm.cdf(d2)
     bsm_call_string = 'BSM call price {}'.format(round(bsm_call, 2))
     # Calculate euro put price
-    bsm_put = strike * exp(-rfr * time_to_exp) * norm.cdf(-d2) - spot * exp(-div_yield * time_to_exp) * norm.cdf(-d1)
+    bsm_put = strike * exp(-rfr * time_to_exp) * norm.cdf(-d2) - \
+        spot * exp(-div_yield * time_to_exp) * norm.cdf(-d1)
     bsm_put_string = 'BSM put price {}'.format(round(bsm_put, 2))
     # Check if call or put calculation and return value
     if flag_call_put == 'C':
@@ -99,13 +102,17 @@ def main(ticker, put_or_call_flag, standard_deviation_period, strike, expiration
     # Set risk free rate (can define method for this later)
     risk_free_rate = rfr                        # Will define a method for this later
     # Set dividend yield
-    returned_get_dividend_yield = div_yield     # Will define a method for this later
+    # Will define a method for this later
+    returned_get_dividend_yield = div_yield
     # Derive option prices
     bsm_price = bsm_calculation(put_or_call_flag,                                           # Call or put flag
-                                get_spot_price(ticker),                                     # Spot price
+                                # Spot price
+                                get_spot_price(ticker),
                                 strike,                                                     # Strike price
-                                get_time_to_expiry(expiration_date),                        # Days to expiration
-                                get_standard_deviation(ticker, standard_deviation_period),  # Volatility
+                                # Days to expiration
+                                get_time_to_expiry(expiration_date),
+                                get_standard_deviation(
+                                    ticker, standard_deviation_period),  # Volatility
                                 risk_free_rate,                                             # Risk free rate
                                 returned_get_dividend_yield)                                # Dividend yield
     # Fetch market price
@@ -116,7 +123,8 @@ def main(ticker, put_or_call_flag, standard_deviation_period, strike, expiration
     # Print ticker and spot to console
     print('{} $ {} USD'.format(ticker.upper(), get_spot_price(ticker)))
     print('Volatility over {} sample'.format(standard_deviation_period))
-    print('Annualized volatility {}'.format(get_standard_deviation(ticker, standard_deviation_period)))
+    print('Annualized volatility {}'.format(
+        get_standard_deviation(ticker, standard_deviation_period)))
     # Print BSM price to console
     if put_or_call_flag == 'C':
         bsm_call_string = 'BSM call price {}'.format(round(bsm_price, 2))
