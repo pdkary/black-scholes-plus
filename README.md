@@ -28,7 +28,7 @@ print(bsmc_data)
 This queries yfinance's option api for options with matching strike price, and expiration date.  (expiration date may throw errors if no options are available).
 
 It then generates a dataframe report of matching options, with their Black-Scholes value added as a column.
-####Output:
+#### Output:
 ```
 [*********************100%***********************]  3 of 3 completed
   contractSymbol  type  strike  BSM Value  lastPrice     bid     ask  openInterest  impliedVolatility  Annual Volatility
@@ -39,18 +39,18 @@ It then generates a dataframe report of matching options, with their Black-Schol
 4           NVDA  CALL   650.0       6.33      18.85   18.55   19.25        2668.0             0.5274             0.3293
 5           NVDA   PUT   650.0      58.54      64.47   68.50   71.45          42.0             0.5202             0.3293
 ```
-##Modules
-###Spot Data Service
+## Modules
+### Spot Data Service
 Gathers market values for a set of securities, looking back over a given period, at a given interval.
 
 Used for requesting data, and performing mathematical operations.
 
-###Option Data Service
+### Option Data Service
 Gathers market values for put and call options on securities, expiring on a given date, with specified strike prices for each ticker.
 
 Currently used only for requesting and formatting yfinance data.
 
-###BSM_Calculator
+### BSM_Calculator
 This calculator uses the spot data service, to perform a vectorized black-scholes calculation on arrays of stock data.
 
 get_report uses the option data service to query and display recent prices for options that meet the specified criteria, with their corresponding bsm value
