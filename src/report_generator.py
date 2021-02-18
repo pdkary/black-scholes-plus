@@ -12,9 +12,13 @@ class ReportGenerator:
         self.option_service = OptionDataService(tickers)
 
     def get_ATM_report(self,expiration_date):
+        return self.get_ATM_plus_x(expiration_date,0)
+
+    def get_ATM_plus_x(self,expiration_date,x):
         latest = self.spot_service.get_latest()
-        s_map = {x:ceil(latest[x]) for x in self.tickers}
+        s_map = {t:round(latest[t])+x for t in self.tickers}
         return self.get_report(expiration_date,s_map)
+
 
     def get_report(self, expiration_date, strike_map):
         option_df = self.option_service.get_data(expiration_date, strike_map)

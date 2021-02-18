@@ -3,4 +3,4 @@ pandas
 scipy
 numpy
 datetime
-re
+wallstreet
