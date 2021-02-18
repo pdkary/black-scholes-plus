@@ -6,10 +6,10 @@ Py Script designed to efficiently employ BSM formula via automatically calculati
 ## Installation
 Script requires a few things, like yfinance for data, numpy for calculations, yada yada yada.
 ```sh
-   git clone https://github.com/pdkary/black-scholes-plus.git
+git clone https://github.com/pdkary/black-scholes-plus.git
 ```
 ```python
-    pip3 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Example Usage
