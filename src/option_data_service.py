@@ -3,7 +3,9 @@ import yfinance as yf
 import pandas as pd
 
 class OptionDataService:
-    desired_columns = ['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility']
+    # desired_columns = ['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility']
+    desired_columns = ['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'impliedVolatility']
+
     def __init__(self,tickers):
         self.tickers = tickers
     

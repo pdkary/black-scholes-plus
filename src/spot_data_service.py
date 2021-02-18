@@ -3,7 +3,7 @@ import numpy as np
 from src.time_helpers import *
 
 class SpotDataService:
-    def __init__(self,tickers,period,interval):
+    def __init__(self,tickers,period='1y',interval='1d'):
         self.tickers = tickers
         self.period = period
         self.interval = interval
@@ -36,10 +36,13 @@ class SpotDataService:
         # # Delete first datum (NaN)
         per_change = per_change.iloc[1:]
         # # Standard deviation
+        # # This is the deviation of changes at each interval
         standard_deviation = np.std(per_change)
 
+        # # intervals per period
+        # intervals_per_period = get_intervals_per_period(self.period,self.interval)
         # # Annualized standard dev
-        annual_std = standard_deviation * np.sqrt(get_annualization_factor(self.interval))
+        annual_std = standard_deviation * np.sqrt(252)
         annual_std.index = annual_std.index.map(
             lambda x: x.replace("_Close", ""))
         return annual_std
