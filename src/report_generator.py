@@ -19,6 +19,11 @@ class ReportGenerator:
         s_map = {t:round(latest[t])+x for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
+    def get_ATM_plux_x_percent(self,expiration_date,x):
+        latest = self.spot_service.get_latest()
+        s_map = {t:round(latest[t])*(1+x) for t in self.tickers}
+        return self.get_report(expiration_date,s_map)
+
 
     def get_report(self, expiration_date, strike_map):
         option_df = self.option_service.get_data(expiration_date, strike_map)

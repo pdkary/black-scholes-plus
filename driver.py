@@ -6,6 +6,6 @@ if __name__ == '__main__':
     # expiration_date = "2023-03-17"
     expiration_date = "2021-02-19"
     rg = ReportGenerator(tickers,rfr=0.012)
-    report = rg.get_ATM_plus_x(expiration_date,0)
+    report = rg.get_ATM_plus_x(expiration_date,10)
     print(report)
     
