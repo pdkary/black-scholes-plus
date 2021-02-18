@@ -15,29 +15,32 @@ Using the calculator is relatively simple, all you need to begin is a set of tic
 tickers = ['AAPL', 'GOOG', 'NVDA']
 strike_map = {'AAPL':200,'GOOG':1220,'NVDA':650}
 
-bsmc = BSM_Calculator(tickers,interval='1d')
-```
-This initializes the calculator, and requests 3 months of spot data, with `1d` (one day) between datapoints.
-```python
+expr_date = "2021-02-19"
 rfr = 0.012 #risk free rate
-dyield = 0 #dividend yield
 
-bmsc_data = bsmc.get_report("2021-03-19",strike_map,rfr,dyield)
-print(bsmc_data)
+#Get report using specified strikes
+rg = ReportGenerator(tickers,rfr)
+report = rg.get_report(expr_date,strike_map)
 ```
-This queries yfinance's option api for options with matching strike price, and expiration date.  (expiration date may throw errors if no options are available).
+This queries the last 1 year of daily price changes for each stock, and uses these to calculate standard deviation of 1 day changes.
 
-It then generates a dataframe report of matching options, with their Black-Scholes value added as a column.
+Black-Scholes calculations are then done using the specified strike prices, and risk free rate.
+
+Reports of recent matching options, are then shown, with their corresponding BSM value.
 #### Output:
 ```
-[*********************100%***********************]  3 of 3 completed
-  contractSymbol  type  strike  BSM Value  lastPrice     bid     ask  openInterest  impliedVolatility  Annual Volatility
-0           AAPL  CALL   200.0       0.00       0.08    0.08    0.09       21714.0             0.5508             0.2916
-1           AAPL   PUT   200.0      64.83      65.90   64.55   64.80         709.0             0.5137             0.2916
-2           GOOG  CALL  1220.0     882.87     544.00  609.30  617.40           4.0             0.0000             0.2805
-3           GOOG   PUT  1220.0       0.00       0.35    0.00    0.85          39.0             0.6868             0.2805
-4           NVDA  CALL   650.0       6.33      18.85   18.55   19.25        2668.0             0.5274             0.3293
-5           NVDA   PUT   650.0      58.54      64.47   68.50   71.45          42.0             0.5202             0.3293
+  contractSymbol  type  strike  BSM Value  lastPrice     bid     ask  impliedVolatility  Annual Vol
+0           AAPL  CALL   200.0       0.00       0.01    0.00    0.01             1.8125      0.4705
+1           AAPL   PUT   200.0      69.17      64.83   68.80   69.90             2.6875      0.4705
+2           GOOG  CALL  1220.0     908.27     647.50  904.00  914.00             2.9941      0.3958
+3           GOOG   PUT  1220.0       0.00       0.22    0.00    1.40             3.0000      0.3958
+4           NVDA  CALL   650.0       0.01       0.24    0.24    0.28             0.5957      0.5839
+5           NVDA   PUT   650.0      53.79      55.23   52.45   55.75             0.6231      0.5839
+```
+
+If instead, you wanted to use at-the-money prices
+```python
+report = rg.get_ATM_report(expr_date)
 ```
 ## Modules
 ### Spot Data Service
@@ -53,4 +56,5 @@ Currently used only for requesting and formatting yfinance data.
 ### BSM_Calculator
 This calculator uses the spot data service, to perform a vectorized black-scholes calculation on arrays of stock data.
 
-get_report uses the option data service to query and display recent prices for options that meet the specified criteria, with their corresponding bsm value
+### Report Generator
+Uses all previous modules to generate and display a report of recent calls, with BSM values, and implied/annual volatility

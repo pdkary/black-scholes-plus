@@ -1,12 +1,14 @@
-from src.BSM_calculator import BSM_Calculator
+from src.report_generator import ReportGenerator
 
 tickers = ['AAPL', 'GOOG', 'NVDA']
 strike_map = {'AAPL':200,'GOOG':1220,'NVDA':650}
 
-bsmc = BSM_Calculator(tickers,interval='1d')
-
+expr_date = "2021-02-19"
 rfr = 0.012 #risk free rate
-dyield = 0 #dividend yield
 
-bsmc_data = bsmc.get_report("2021-03-19",strike_map,rfr,dyield)
-print(bsmc_data)
+#Get report using specified strikes
+rg = ReportGenerator(tickers,rfr)
+report = rg.get_report(expr_date,strike_map)
+print(report)
+#Get report for at the money prices
+report_atm = rg.get_ATM_report(expr_date)
