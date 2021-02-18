@@ -16,19 +16,19 @@ class ReportGenerator:
 
     def get_ATM_plus_x(self,expiration_date,x):
         latest = self.spot_service.get_latest()
-        s_map = {t:round(latest[t])+x for t in self.tickers}
+        s_map = {t:round(latest[t]+x,1) for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
     def get_ATM_plus_x_percent(self,expiration_date,x):
         latest = self.spot_service.get_latest()
-        s_map = {t:round(latest[t])*(1+x) for t in self.tickers}
+        s_map = {t:round(latest[t]*(1+x),1) for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
-
     def get_report(self, expiration_date, strike_map):
+        spots = self.spot_service.get_latest()
         option_df = self.option_service.get_data(expiration_date, strike_map)
         bsmc_data = BSM_Calculator.bsm_calculation(
-            spot=self.spot_service.get_latest(), 
+            spot=spots, 
             vol=self.spot_service.get_stdev(), 
             strike_map=strike_map, 
             expr_date=expiration_date, 
@@ -45,10 +45,22 @@ class ReportGenerator:
                 return bsmc_data["Put value"][symbol]
 
         option_df["BSM Value"] = np.vectorize(get_val)(symbols, types).round(2)
-        option_df["Annual Vol"] = symbols.apply(
-            lambda x: bsmc_data["Annual Vol"][x])
+        option_df["Annual Vol"] = symbols.apply(lambda x: bsmc_data["Annual Vol"][x])
+        option_df["spot"] = symbols.apply(lambda x: spots[x])
 
-        cols = option_df.columns.tolist()
-        cols = cols[0:3] + cols[-2:-1] + cols[3:-2] + cols[-1:]
+        display_cols = ['contractSymbol', 'type','spot','strike','BSM Value', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility', 'Annual Vol']
 
-        return option_df[cols].round(4)
+        return option_df[display_cols].round(4)
+    
+    def get_around_ATM_report(self,expiration_date,step):
+        
+        percent_range = [step*x for x in range(-5,5)]
+        for i in percent_range:
+            c = "+" if i > 0 else "-"
+            print("-"*56+"("+c+str(abs(i)) + "%)" + "-"*56)
+            try:
+                report = self.get_ATM_plus_x_percent(expiration_date,i/100)
+                print(report)
+            except IndexError:
+                print("Nothing to show")
+                continue
