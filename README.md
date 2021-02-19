@@ -16,14 +16,15 @@ pip3 install -r requirements.txt
 Using the calculator is relatively simple, all you need to begin is a set of tickers, with corresponding strike prices to query.
 ```python
 tickers = ['AAPL', 'GOOG', 'NVDA']
-strike_map = {'AAPL':200,'GOOG':1220,'NVDA':650}
 
 expr_date = "2021-02-19"
 rfr = 0.012 #risk free rate
 
-#Get report using specified strikes
+#Initialize Report generator with tickers and rfr
 rg = ReportGenerator(tickers,rfr)
-report = rg.get_report(expr_date,strike_map)
+#Generate report
+report = rg.get_ATM_report(expr_date)
+print(report)
 ```
 This queries the last 1 year of daily price changes for each stock, and uses these to calculate standard deviation of 1 day changes.
 
@@ -32,13 +33,11 @@ Black-Scholes calculations are then done using the specified strike prices, and 
 Reports of recent matching options, are then shown, with their corresponding BSM value.
 #### Output:
 ```
-  contractSymbol  type  strike  BSM Value  lastPrice     bid     ask  impliedVolatility  Annual Vol
-0           AAPL  CALL   200.0       0.00       0.01    0.00    0.01             1.8125      0.4705
-1           AAPL   PUT   200.0      69.17      64.83   68.80   69.90             2.6875      0.4705
-2           GOOG  CALL  1220.0     908.27     647.50  904.00  914.00             2.9941      0.3958
-3           GOOG   PUT  1220.0       0.00       0.22    0.00    1.40             3.0000      0.3958
-4           NVDA  CALL   650.0       0.01       0.24    0.24    0.28             0.5957      0.5839
-5           NVDA   PUT   650.0      53.79      55.23   52.45   55.75             0.6231      0.5839
+  contractSymbol  type    spot  strike  BSM Value  lastPrice   bid   ask  openInterest  impliedVolatility  Annual Vol
+0           AAPL  CALL  128.73   129.0       0.00       0.68  0.69  0.68          6361             0.2100      0.4699
+1           AAPL   PUT  128.73   129.0       0.27       1.07  1.01  1.05         16721             0.2412      0.4699
+2           NVDA  CALL  590.44   590.0       0.44       4.96  4.80  5.10          3530             0.2831      0.5829
+3           NVDA   PUT  590.44   590.0       0.00       5.25  5.00  5.40          2659             0.3192      0.5829
 ```
 
 If instead, you wanted to use at-the-money prices

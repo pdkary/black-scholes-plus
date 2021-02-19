@@ -1,11 +1,16 @@
 from src.report_generator import ReportGenerator
-
+import time
+from datetime import date
 if __name__ == '__main__':
-    tickers = ['IYZ', 'AAPL', 'AMD', 'AMGN', 'AMZN', 'BCE', 'CSCO', 'FB','GOOG', 'IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP', 'VZ']
+    tickers = ['AAPL', 'AMD', 'AMGN', 'AMZN', 'CSCO', 'FB','GOOG', 'IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP']
 
-    # expiration_date = "2023-03-17"
-    expiration_date = "2021-03-19"
-    rg = ReportGenerator(tickers,rfr=0.012)
-    # get 5% increase 
-    rg.get_around_ATM_report(expiration_date,.25)
-    
+    rfr = 0.012 #risk free rate
+    #initialize report generator for tickers
+    rg = ReportGenerator(tickers,rfr)
+    #Get report for at the money prices
+    tic = time.perf_counter()
+    report_atm = rg.get_ATM_multi_report_plus_x_percent(.05)
+    ##write to csv
+    report_atm.to_csv('reports/report_' + str(date.today())+'.csv')
+    toc = time.perf_counter()
+    print("Analyzed {} options in {} seconds".format(len(report_atm.index),toc-tic))

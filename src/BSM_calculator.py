@@ -11,6 +11,8 @@ class BSM_Calculator:
     @staticmethod
     def bsm_calculation(spot,vol,strike_map,expr_date,rfr,div_yield):
         time_to_exp = get_time_to_expiry(expr_date)/365
+        if time_to_exp < 0:
+            time_to_exp=0
         strike_ps = np.array(list(strike_map.values()))
 
         d1 = (np.log(spot / strike_ps) + ((rfr - div_yield) +
