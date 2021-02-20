@@ -19,6 +19,7 @@ x2 = []
 if __name__ == '__main__':
     for i in range(1,len(tickers)):
         tkrs = tickers[0:i]
+        print("starting test with: {}".format(tkrs))
         (duration,num_options,num_tkrs) = test(tkrs)
         print("test completed with: ({},{},{})".format(duration,num_options,num_tkrs))
         y.append(duration)
@@ -31,7 +32,7 @@ if __name__ == '__main__':
 
     axs[1].plot(x2,y)
     axs[1].set_title("Number of options vs duration")
-    plt.savefig("test/test_report.png")
+    plt.savefig("reports/test_report.png")
     plt.close()
 
 

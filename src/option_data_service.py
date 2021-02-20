@@ -1,7 +1,6 @@
 
 import yfinance as yf
 import pandas as pd
-from src.NoOptionsFoundException import NoOptionsFoundException
 
 class OptionDataService:
     desired_columns = ['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'openInterest', 'impliedVolatility']

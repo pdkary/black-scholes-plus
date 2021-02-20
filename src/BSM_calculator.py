@@ -14,7 +14,7 @@ class BSM_Calculator:
         if time_to_exp < 0:
             time_to_exp=0
         strike_ps = np.array(list(strike_map.values()))
-
+        
         d1 = (np.log(spot / strike_ps) + ((rfr - div_yield) +
                                           vol*vol / 2.) * time_to_exp) / (vol * np.sqrt(time_to_exp))
         d2 = d1 - vol*np.sqrt(time_to_exp)
