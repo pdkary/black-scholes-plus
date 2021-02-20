@@ -39,3 +39,7 @@ def ATM_strikes_plus_absolute_x_no_expirations():
 def ATM_strikes_plus_relative_x_no_expirations():
     rg = ReportGenerator(tickers,0.012)
     rg.get_ATM_multi_report_plus_x_percent(.10).to_csv("outputfilename.csv")
+
+if __name__ == '__main__':
+    ATM_strikes_with_expiration()
+    
