@@ -10,8 +10,12 @@ class OptionDataService:
         self.tickers = tickers
         self.yf_tickers = {t:yf.Ticker(t) for t in self.tickers}
     
-    def get_expr_dates(self):
-        return {tkr:self.yf_tickers[tkr].options for tkr in self.tickers}
+    ## returns a matrix of (NxM) Tkrs: [expr_dates (padded with 0's to the longest entry)]
+    def get_expiration_dates(self):
+        raw_data = {tkr:list(self.yf_tickers[tkr].options) for tkr in self.tickers}
+        max_len = max([len(raw_data[tkr]) for tkr in self.tickers])
+        raw_data = {tkr:raw_data[tkr]+ [0]*(max_len - len(raw_data[tkr])) for tkr in self.tickers}
+        return pd.DataFrame(raw_data)
     
     def get_data(self,expiration_date,strike_map):
         option_df = pd.DataFrame()
@@ -26,6 +30,8 @@ class OptionDataService:
     
     def get_single_ticker(self,ticker,expiration,strike):
         output_df = pd.DataFrame()
+        if expiration==0:
+            return output_df
         try:
             option_chain = self.yf_tickers[ticker].option_chain(expiration)
         except ValueError as e:
@@ -55,7 +61,7 @@ class OptionDataService:
     
     def get_all_expiration_data(self,strike_map):
         output_df = pd.DataFrame()
-        exp_dates = {t:list(self.yf_tickers[t].options) for t in self.tickers}
+        exp_dates = self.get_expiration_dates()
         for t in self.tickers:
             for d in exp_dates[t]:
                 expr_data = self.get_single_ticker(t,d,strike_map[t])

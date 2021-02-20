@@ -1,11 +1,13 @@
 from src.spot_data_service import SpotDataService
 from src.option_data_service import OptionDataService
 from src.BSM_calculator import BSM_Calculator
+from src.time_helpers import get_time_to_expiry
 import numpy as np
+import pandas as pd
 from math import ceil
 
 class ReportGenerator:
-    display_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest', 'impliedVolatility', 'Annual Vol']
+    display_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest','Delta','Gamma','Theta','impliedVolatility', 'Annual Vol']
 
     def __init__(self, tickers,rfr):
         self.tickers = tickers
@@ -40,31 +42,34 @@ class ReportGenerator:
         return self.get_multi_expiration_report(s_map)
     
     def get_multi_expiration_report(self,strike_map):
-        latest = self.spot_service.get_latest()
-        spots = {t:round(latest[t]) for t in self.tickers}
+        spots = self.spot_service.get_latest()
 
+        expr_dates = self.option_service.get_expiration_dates()
+        
         option_df = self.option_service.get_all_expiration_data(strike_map)
+        if option_df.empty:
+            return option_df
         option_df = option_df.reset_index(drop=True)
-        expr_dates = self.option_service.get_expr_dates()
+        
+        strikes = [strike_map[x] for x in self.tickers]
+        vol = self.spot_service.get_stdev()
+        bsmc_data = BSM_Calculator.bsm_calculation(self.tickers,spots,strikes,vol,0.012,0,expr_dates)
 
-        bsmc_map = self.get_bsmc_map(expr_dates,spots)
         idxs = option_df.index
         symbols = option_df['contractSymbol'].apply(lambda x:x[0:x.index("2")])
-        exprs = option_df['expiration']
         types = option_df['type']
+        exprs = option_df['expiration']
+        strikes = option_df['strike']
         
-        put_BE = option_df["strike"] - option_df["ask"]
-        call_BE = option_df["strike"] + option_df["ask"]
+        put_BE = strikes - option_df["ask"]
+        call_BE = strikes + option_df["ask"]
 
         ## functions in need of vectorization
-        def get_val(symbol, expr,type ):
+        def bsmc_get(symbol,expr,type,val_call,vall_put):
             if type == "CALL":
-                return bsmc_map[expr]["Call value"][symbol]
+                return bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_call]
             elif type == "PUT":
-                return bsmc_map[expr]["Put value"][symbol]
-
-        def get_vol(symbol,expr):
-            return bsmc_map[expr]["Annual Vol"][symbol]
+                return bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),vall_put]
 
         def get_breakeven(idx,type):
             if type=="PUT":
@@ -77,48 +82,77 @@ class ReportGenerator:
             val_sign = val/abs(val)
             return val_sign*round(abs(val),2)
 
-        option_df["BSM Value"] = np.vectorize(get_val)(symbols,exprs,types).round(2)
-        option_df["Annual Vol"] = np.vectorize(get_vol)(symbols,exprs)
+        vector_bsmc_get = np.vectorize(bsmc_get)
+        option_df["BSM Value"] = vector_bsmc_get(symbols,exprs,types,'Call Value','Put Value').round(2)
+        option_df["Annual Vol"] = vector_bsmc_get(symbols,exprs,types,'Annual Vol','Annual Vol')
+        option_df["Delta"] = vector_bsmc_get(symbols,exprs,types,'Call Delta','Put Delta')
+        option_df["Gamma"] = vector_bsmc_get(symbols,exprs,types,'Gamma','Gamma')
+        option_df["Theta"] = vector_bsmc_get(symbols,exprs,types,'Call Theta','Put Theta')
+        option_df["Vega"] = vector_bsmc_get(symbols,exprs,types,'Vega','Vega')
+        option_df["Rho"] = vector_bsmc_get(symbols,exprs,types,"Call Rho","Put Rho")
         option_df["B/E"] = np.vectorize(get_breakeven)(idxs,types)
+
         option_df["spot"] = symbols.apply(lambda x: spots[x])
         option_df['d% for BE'] = round((option_df['B/E'] - option_df['spot'])/option_df['spot'],2)
         option_df['BSM% over ask'] = np.vectorize(get_percent_over)(option_df['BSM Value'],option_df['ask'])
         return option_df[self.display_cols]
     
-    ## get a map of {expiration_dates -> {tkr -> bsm_val}} 
-    def get_bsmc_map(self,expr_dates,strike_map):
-        spots = self.spot_service.get_latest()
-        vol = self.spot_service.get_stdev()
-        bsmc_map = {}
-        for t in self.tickers:
-            for e in expr_dates[t]:
-                if e not in bsmc_map:
-                    bsmc_map[e] = BSM_Calculator.bsm_calculation(spots,vol,strike_map,e,self.rfr,0)
-        return bsmc_map
-
     def get_report(self, expiration_date, strike_map):
         spots = self.spot_service.get_latest()
         option_df = self.option_service.get_data(expiration_date, strike_map)
-        bsmc_data = BSM_Calculator.bsm_calculation(
+        if option_df.empty:
+            return option_df
+        strikes = np.array([strike_map[x] for x in self.tickers])
+        expr_dates = pd.Series([expiration_date]*len(self.tickers),index=self.tickers)
+        
+        bsmc_data = BSM_Calculator.get_single_expiration(
+            tkrs=self.tickers,
             spot=spots, 
             vol=self.spot_service.get_stdev(), 
-            strike_map=strike_map, 
-            expr_date=expiration_date, 
+            strike=strikes, 
+            expr_dates=expr_dates, 
             rfr=self.rfr,
             div_yield=0)
 
-        symbols = option_df['contractSymbol']
+        idxs = option_df.index
+        
+        symbols = option_df['contractSymbol'].apply(lambda x:x[0:x.index("2")])
         types = option_df['type']
+        exprs = option_df['expiration']
+        strikes = option_df['strike']
+        
+        put_BE = strikes - option_df["ask"]
+        call_BE = strikes + option_df["ask"]
 
-        def get_val(symbol, type):
+        ## functions in need of vectorization
+        def bsmc_get(symbol,expr,type,val_call,vall_put):
             if type == "CALL":
-                return bsmc_data["Call value"][symbol]
+                return bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_call]
             elif type == "PUT":
-                return bsmc_data["Put value"][symbol]
+                return bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),vall_put]
 
-        option_df["BSM Value"] = np.vectorize(get_val)(symbols, types).round(2)
-        option_df["Annual Vol"] = symbols.apply(lambda x: bsmc_data["Annual Vol"][x])
+        def get_breakeven(idx,type):
+            if type=="PUT":
+                return put_BE[idx]
+            elif type=="CALL":
+                return call_BE[idx]
+        
+        def get_percent_over(val1,val2):
+            val = (val1-val2)/val2
+            val_sign = val/abs(val)
+            return val_sign*round(abs(val),2)
+
+        vector_bsmc_get = np.vectorize(bsmc_get)
+        option_df["BSM Value"] = vector_bsmc_get(symbols,exprs,types,'Call Value','Put Value').round(2)
+        option_df["Annual Vol"] = vector_bsmc_get(symbols,exprs,types,'Annual Vol','Annual Vol')
+        option_df["Delta"] = vector_bsmc_get(symbols,exprs,types,'Call Delta','Put Delta')
+        option_df["Gamma"] = vector_bsmc_get(symbols,exprs,types,'Gamma','Gamma')
+        option_df["Theta"] = vector_bsmc_get(symbols,exprs,types,'Call Theta','Put Theta')
+        option_df["Vega"] = vector_bsmc_get(symbols,exprs,types,'Vega','Vega')
+        option_df["Rho"] = vector_bsmc_get(symbols,exprs,types,"Call Rho","Put Rho")
+        option_df["B/E"] = np.vectorize(get_breakeven)(idxs,types)
+
         option_df["spot"] = symbols.apply(lambda x: spots[x])
-
-
-        return option_df[self.display_cols].round(4)
+        option_df['d% for BE'] = round((option_df['B/E'] - option_df['spot'])/option_df['spot'],2)
+        option_df['BSM% over ask'] = np.vectorize(get_percent_over)(option_df['BSM Value'],option_df['ask'])
+        return option_df[self.display_cols]

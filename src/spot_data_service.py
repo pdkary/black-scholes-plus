@@ -16,8 +16,9 @@ class SpotDataService:
         spot_data = yf.download(tickers=tkr_str,
                                 period=self.period,
                                 interval=self.interval,
-                                group_by='ticker')
-        # fix multi-column errors
+                                group_by='ticker',
+                                progress=False)
+        # fix multi-column indicies
         if type(spot_data.columns) == MultiIndex:
             spot_data.columns = spot_data.columns.map("_".join)
 
