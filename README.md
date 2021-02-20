@@ -13,37 +13,69 @@ pip3 install -r requirements.txt
 ```
 
 ## Example Usage
-Using the calculator is relatively simple, all you need to begin is a set of tickers, with corresponding strike prices to query.
-```python
+The Report Generator, is the heart of the entire application. This module uses all other services to gather spot and option data for each ticker, and performs black-scholes calculations for each ticker/expiry/strike 
+
+As of right now, there are 3 methods of querying data
+### Specified Strikes
+If you have strike prices in mind, you query data using a specified expiration date
+```python3
 tickers = ['AAPL', 'GOOG', 'NVDA']
-
-expr_date = "2021-02-19"
-rfr = 0.012 #risk free rate
-
-#Initialize Report generator with tickers and rfr
-rg = ReportGenerator(tickers,rfr)
-#Generate report
-report = rg.get_ATM_report(expr_date)
-print(report)
+strikes = {'AAPL':140,'GOOG':2200,'NVDA':610}
+expr_date = "2021-09-17"
+rg = ReportGenerator(tickers,0.012)
+rg.get_report(expr_date,strikes).to_csv("outputfilename.csv")
 ```
-This queries the last 1 year of daily price changes for each stock, and uses these to calculate standard deviation of 1 day changes.
-
-Black-Scholes calculations are then done using the specified strike prices, and risk free rate.
-
-Reports of recent matching options, are then shown, with their corresponding BSM value.
-#### Output:
+If instead you wanted to query options at this strike for all available expiration dates
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+strikes = {'AAPL':140,'GOOG':2200,'NVDA':610}
+rg = ReportGenerator(tickers,0.012)
+rg.get_multi_expiration_report(strikes).to_csv("outputfilename.csv")
 ```
-  contractSymbol  type    spot  strike  BSM Value  lastPrice   bid   ask  openInterest  impliedVolatility  Annual Vol
-0           AAPL  CALL  128.73   129.0       0.00       0.68  0.69  0.68          6361             0.2100      0.4699
-1           AAPL   PUT  128.73   129.0       0.27       1.07  1.01  1.05         16721             0.2412      0.4699
-2           NVDA  CALL  590.44   590.0       0.44       4.96  4.80  5.10          3530             0.2831      0.5829
-3           NVDA   PUT  590.44   590.0       0.00       5.25  5.00  5.40          2659             0.3192      0.5829
+### At-The-Money Strikes
+If instead you do not have strike prices in mind, you can query ATM strike prices for a given expiration date
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+expr_date = "2021-09-17"
+rg = ReportGenerator(tickers,0.012)
+rg.get_ATM_report(expr_date).to_csv("outputfilename.csv")
+```
+You can also perform the same operation against all possible expiration dates
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+rg = ReportGenerator(tickers,0.012)
+rg.get_ATM_multi_report().to_csv("outputfilename.csv")
 ```
 
-If instead, you wanted to use at-the-money prices
-```python
-report = rg.get_ATM_report(expr_date)
+### At-The-Money Plus X
+For calculation revolving around the ATM price, methods are included for adding relative and absolute increases/decreases to ATM price, at a given expiration date.
+#### Absolute increase by $10, at specific expiry
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+expr_date = "2021-09-17"
+rg = ReportGenerator(tickers,0.012)
+rg.get_ATM_plus_x(expr_date,10).to_csv("outputfilename.csv")
 ```
+#### Relative increase by 10%, at specific expiry
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+expr_date = "2021-09-17"
+rg = ReportGenerator(tickers,0.012)
+rg.get_ATM_plus_x_percent(expr_date,.10).to_csv("outputfilename.csv")
+```
+#### Absolute increase by $10, at all expiries
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+rg = ReportGenerator(tickers,0.012)
+rg.get_ATM_multi_report_plus_x(10).to_csv("outputfilename.csv")
+```
+#### Relative increase by 10%, at all expiries
+```python3
+tickers = ['AAPL', 'GOOG', 'NVDA']
+rg = ReportGenerator(tickers,0.012)
+rg.get_ATM_multi_report_plus_x_percent(.10).to_csv("outputfilename.csv")
+```
+**Note**: all examples can be found in examples.py
 ## Modules
 ### Spot Data Service
 Gathers market values for a set of securities, looking back over a given period, at a given interval.
@@ -56,7 +88,7 @@ Gathers market values for put and call options on securities, expiring on a give
 Currently used only for requesting and formatting yfinance data.
 
 ### BSM_Calculator
-This calculator uses the spot data service, to perform a vectorized black-scholes calculation on arrays of stock data.
+This calculator uses the spot data service, to perform a vectorized black-scholes calculation on arrays of stock data. Calculations include BSM value for CALL/PUT, Greeks, Implied volatility.
 
 ### Report Generator
-Uses all previous modules to generate and display a report of recent calls, with BSM values, and implied/annual volatility
+Uses all previous modules to generate and display a report of recent calls, with BSM values, and implied/annual volatility.

@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     second_degree_yx1 = np.polyfit(x1,y,2)
     second_degree_yx2 = np.polyfit(x2,y,2)
-    x1_label = "y(#tkrs) = {}x^2+{}x+{}".format(round(second_degree_yx1[0],2),round(second_degree_yx1[1],2),round(second_degree_yx1[2],2))
-    x2_label = "y(#opts) = {}x^2+{}x+{}".format(round(second_degree_yx2[0],2),round(second_degree_yx2[1],2),round(second_degree_yx2[2],2))
+    x1_label = "y(#tkrs) = {}x^2+{}x+{}".format(round(second_degree_yx1[0],3),round(second_degree_yx1[1],3),round(second_degree_yx1[2],3))
+    x2_label = "y(#opts) = {}x^2+{}x+{}".format(round(second_degree_yx2[0],3),round(second_degree_yx2[1],3),round(second_degree_yx2[2],3))
     x1_func = np.vectorize(lambda x: second_degree_yx1[0]*(x**2) + second_degree_yx1[1]*x+second_degree_yx1[2])
     x2_func = np.vectorize(lambda x: second_degree_yx2[0]*(x**2) + second_degree_yx2[1]*x+second_degree_yx2[2])
 
