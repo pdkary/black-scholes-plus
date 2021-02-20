@@ -78,12 +78,11 @@ rg.get_ATM_multi_report_plus_x_percent(.10).to_csv("outputfilename.csv")
 **Note**: all examples can be found in examples.py
 ### Example output
 If you were to run with examples.py file function `ATM_strikes_with_expiration()`, The following csv would be generated
-```
-,contractSymbol,expiration,type,spot,strike,BSM Value,BSM% over ask,lastPrice,bid,ask,B/E,d% for BE,openInterest Delta,Gamma,Theta,impliedVolatility,Annual Vol
-0,AAPL210917C00130000,2021-09-17,CALL,129.87,130.0,129.85,8.34,13.7,13.6,13.9,143.9,0.11,19780.0,0.9999147094709087,3.8697739177355263e-07,-3.5017921561715013e-06,0.3561465753173828,0.4702678167915942
-1,AAPL210917P00130000,2021-09-17,PUT,129.87,130.0,10.69,-0.23,13.8,13.7,13.85,116.15,-0.11,12775.0,-8.529052909134194e-05,3.8697739177355263e-07,0.0005066800889261278,0.3517520880126953,0.4702678167915942
+|id |contractSymbol     |expiration|type|spot  |strike|BSM Value|BSM% over ask|lastPrice|bid |ask  |B/E   |d% for BE|openInterest|Delta                 |Gamma                 |Theta                  |impliedVolatility |Annual Vol        |
+|---|-------------------|----------|----|------|------|---------|-------------|---------|----|-----|------|---------|------------|----------------------|----------------------|-----------------------|------------------|------------------|
+|0  |AAPL210917C00130000|2021-09-17|CALL|129.87|130.0 |129.85   |8.34         |13.7     |13.6|13.9 |143.9 |0.11     |19780.0     |0.9999147094709087    |3.8697739177355263e-07|-3.5017921561715013e-06|0.3561465753173828|0.4702678167915942|
+|1  |AAPL210917P00130000|2021-09-17|PUT |129.87|130.0 |10.69    |-0.23        |13.8     |13.7|13.85|116.15|-0.11    |12775.0     |-8.529052909134194e-05|3.8697739177355263e-07|0.0005066800889261278  |0.3517520880126953|0.4702678167915942|
 
-```
 ## Modules
 ### Spot Data Service
 Gathers market values for a set of securities, looking back over a given period, at a given interval.
