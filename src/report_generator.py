@@ -7,7 +7,7 @@ import pandas as pd
 from math import ceil
 
 class ReportGenerator:
-    display_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest','Delta','Gamma','Theta','impliedVolatility', 'Annual Vol']
+    display_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest','Delta','Gamma','Theta','Vega','Rho','impliedVolatility', 'Annual Vol']
 
     def __init__(self, tickers,rfr):
         self.tickers = tickers
