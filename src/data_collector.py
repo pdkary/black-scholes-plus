@@ -10,11 +10,11 @@ So for training, im gonna let this run on a raspberry pi for a few months
 class DataCollector:
     """
     Tickers: list of tickers who's options you want to trade
-    Interval: time between data collections
+    filename: output csv
+    rfr: risk free rate
     """
     def __init__(self,tickers,interval,filename,rfr):
         self.tickers = tickers
-        self.interval = interval # in seconds
         self.filename = filename
         self.rfr = rfr
         self.rg = ReportGenerator(tickers,rfr)
@@ -36,18 +36,12 @@ class DataCollector:
 
         existing_data.to_csv(self.filename)
     
-    def run(self,percent_above_below):
-        while(True):
-            self.update()
-            time.sleep(self.interval)
-        
 if __name__ == '__main__':
     tickers = ['AAPL', 'AMD', 'AMGN', 'AMZN', 'CSCO', 'FB', 'GOOG','IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP']
     filename = "collected_data.csv"
-    interval = 60*5 ## every 5 minutes
     
     dc = DataCollector(tickers,interval,filename,.012)
-    dc.run()
+    dc.update()
 
     
 
