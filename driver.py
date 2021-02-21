@@ -6,4 +6,5 @@ if __name__ == '__main__':
 
     rfr = 0.012  # risk free rate
     # initialize report generator for tickers
-    ReportGenerator(tickers, rfr).get_ATM_multi_report_plus_x(.01).to_csv('reports/report_' + str(date.today())+'.csv')
+    # ReportGenerator(tickers, rfr).get_ATM_multi_report().to_csv('reports/report_ATM_' + str(date.today())+'.csv')
+    ReportGenerator(tickers, rfr).get_ATM_multi_report_plus_x_percent(-.4).to_csv('reports/report_ATM_-40%_' + str(date.today())+'.csv')

@@ -4,7 +4,7 @@ from src.BSM_calculator import BSM_Calculator
 from src.time_helpers import get_time_to_expiry
 import numpy as np
 import pandas as pd
-from math import ceil
+from math import ceil,nan
 
 class ReportGenerator:
     display_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest','Delta','Gamma','Theta','Vega','Rho','impliedVolatility', 'Annual Vol']
@@ -25,7 +25,7 @@ class ReportGenerator:
 
     def get_ATM_plus_x_percent(self,expiration_date,x):
         latest = self.spot_service.get_latest()
-        s_map = {t:round(latest[t]*(1+x),1) for t in self.tickers}
+        s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
     def get_ATM_multi_report(self):
@@ -38,7 +38,7 @@ class ReportGenerator:
 
     def get_ATM_multi_report_plus_x_percent(self,x):
         latest = self.spot_service.get_latest()
-        s_map = {t:round(latest[t]*(1+x),1) for t in self.tickers}
+        s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
         return self.get_multi_expiration_report(s_map)
     
     def get_multi_expiration_report(self,strike_map):
@@ -78,6 +78,8 @@ class ReportGenerator:
                 return call_BE[idx]
         
         def get_percent_over(val1,val2):
+            if val2==0:
+                return nan
             val = (val1-val2)/val2
             val_sign = val/abs(val)
             return val_sign*round(abs(val),2)
