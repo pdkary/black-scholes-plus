@@ -13,7 +13,7 @@ class DataCollector:
     filename: output csv
     rfr: risk free rate
     """
-    def __init__(self,tickers,interval,filename,rfr):
+    def __init__(self,tickers,filename,rfr):
         self.tickers = tickers
         self.filename = filename
         self.rfr = rfr
@@ -35,18 +35,3 @@ class DataCollector:
         existing_data = existing_data.append(ATM)
 
         existing_data.to_csv(self.filename)
-    
-if __name__ == '__main__':
-    tickers = ['AAPL', 'AMD', 'AMGN', 'AMZN', 'CSCO', 'FB', 'GOOG','IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP']
-    filename = "collected_data.csv"
-    
-    dc = DataCollector(tickers,interval,filename,.012)
-    dc.update()
-
-    
-
-
-        
-
-
-

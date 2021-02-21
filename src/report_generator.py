@@ -28,20 +28,20 @@ class ReportGenerator:
         s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
-    def get_ATM_multi_report(self):
-        return self.get_ATM_multi_report_plus_x(0)
+    def get_ATM_multi_report(self,endDate=None):
+        return self.get_ATM_multi_report_plus_x(0,endDate)
 
-    def get_ATM_multi_report_plus_x(self,x):
+    def get_ATM_multi_report_plus_x(self,x,endDate=None):
         latest = self.spot_service.get_latest()
         s_map = {t:round(latest[t]+x,0) for t in self.tickers}
-        return self.get_multi_expiration_report(s_map)
+        return self.get_multi_expiration_report(s_map,endDate)
 
-    def get_ATM_multi_report_plus_x_percent(self,x):
+    def get_ATM_multi_report_plus_x_percent(self,x,endDate=None):
         latest = self.spot_service.get_latest()
         s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
-        return self.get_multi_expiration_report(s_map)
+        return self.get_multi_expiration_report(s_map,endDate)
     
-    def get_multi_expiration_report(self,strike_map):
+    def get_multi_expiration_report(self,strike_map,endDate=None):
         spots = self.spot_service.get_latest()
 
         expr_dates = self.option_service.get_expiration_dates()

@@ -11,8 +11,13 @@ class OptionDataService:
         self.yf_tickers = {t:yf.Ticker(t) for t in self.tickers}
     
     ## returns a matrix of (NxM) Tkrs: [expr_dates (padded with 0's to the longest entry)]
-    def get_expiration_dates(self):
+    def get_expiration_dates(self,endDate=None):
         raw_data = {tkr:list(self.yf_tickers[tkr].options) for tkr in self.tickers}
+        if endDate != None:
+            for tkr in self.tickers:
+                for expr in raw_data[tkr]:
+                    if expr > endDate:
+                        del raw_data[tkr][raw_data[tkr].index(expr)]
         max_len = max([len(raw_data[tkr]) for tkr in self.tickers])
         raw_data = {tkr:raw_data[tkr]+ [0]*(max_len - len(raw_data[tkr])) for tkr in self.tickers}
         return pd.DataFrame(raw_data)
@@ -59,9 +64,9 @@ class OptionDataService:
         
         return output_df
     
-    def get_all_expiration_data(self,strike_map):
+    def get_all_expiration_data(self,strike_map,endDate=None):
         output_df = pd.DataFrame()
-        exp_dates = self.get_expiration_dates()
+        exp_dates = self.get_expiration_dates(endDate)
         for t in self.tickers:
             for d in exp_dates[t]:
                 expr_data = self.get_single_ticker(t,d,strike_map[t])
@@ -69,4 +74,3 @@ class OptionDataService:
                     output_df = output_df.append(expr_data)
         
         return output_df
-    
