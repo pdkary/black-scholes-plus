@@ -4,4 +4,4 @@ tickers = ['AAPL', 'AMD', 'AMGN', 'AMZN', 'CSCO', 'FB', 'GOOG','IBM', 'INTC', 'M
 filename = "collected_data.csv"
     
 dc = DataCollector(tickers,filename,.012)
-dc.update()
+dc.update(.1)
