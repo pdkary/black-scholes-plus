@@ -20,10 +20,14 @@ class DataCollector:
         self.rg = ReportGenerator(tickers,rfr)
     
     def update(self,percent_above_below):
+        print("gathering below ATM")
         below_ATM = self.rg.get_ATM_multi_report_plus_x_percent(percent_above_below)
+        print("gathering above ATM")
         above_ATM = self.rg.get_ATM_multi_report_plus_x_percent(percent_above_below)
+        print("gathering ATM")
         ATM = self.rg.get_ATM_multi_report()
 
+        print('retrieval complete')
         below_ATM['Date Retrieved'] = [datetime.now() for i in range(len(below_ATM.index))]
         above_ATM['Date Retrieved'] = [datetime.now() for i in range(len(above_ATM.index))]
         ATM['Date Retrieved'] = [datetime.now() for i in range(len(ATM.index))]
