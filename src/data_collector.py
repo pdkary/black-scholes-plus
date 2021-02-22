@@ -13,19 +13,20 @@ class DataCollector:
     filename: output csv
     rfr: risk free rate
     """
-    def __init__(self,tickers,filename,rfr):
+    def __init__(self,tickers,filename,rfr,last_expiry_date=None):
         self.tickers = tickers
         self.filename = filename
         self.rfr = rfr
         self.rg = ReportGenerator(tickers,rfr)
+        self.end_expiry = last_expiry_date
     
     def update(self,percent_above_below):
         print("gathering below ATM")
-        below_ATM = self.rg.get_ATM_multi_report_plus_x_percent(percent_above_below)
+        below_ATM = self.rg.get_ATM_multi_report_plus_x_percent(percent_above_below,self.end_expiry)
         print("gathering above ATM")
-        above_ATM = self.rg.get_ATM_multi_report_plus_x_percent(percent_above_below)
+        above_ATM = self.rg.get_ATM_multi_report_plus_x_percent(percent_above_below,self.end_expiry)
         print("gathering ATM")
-        ATM = self.rg.get_ATM_multi_report()
+        ATM = self.rg.get_ATM_multi_report(self.end_expiry)
 
         print('retrieval complete')
         below_ATM['Date Retrieved'] = [datetime.now() for i in range(len(below_ATM.index))]
