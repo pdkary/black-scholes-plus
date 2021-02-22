@@ -42,4 +42,5 @@ class DataCollector:
         existing_data = existing_data.append(above_ATM)
         existing_data = existing_data.append(ATM)
 
+        existing_data = existing_data.reset_index(drop=True)
         existing_data.to_csv(self.filename)
