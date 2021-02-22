@@ -18,7 +18,7 @@ class BSM_Calculator:
     """
     @staticmethod
     def bsm_calculation(tkrs,spot,strike,vol,rfr,div_yield,expr_dates):
-        bsm_data = pd.DataFrame()
+        bsm_data = pd.DataFrame(dtype=object)
         for i in range(len(expr_dates.index)):
             expr_i = expr_dates.loc[expr_dates.index == i]
             data_i = BSM_Calculator.get_single_expiration(tkrs,spot,strike,vol,rfr,div_yield,expr_i)

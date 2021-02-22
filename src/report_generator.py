@@ -46,7 +46,7 @@ class ReportGenerator:
 
         expr_dates = self.option_service.get_expiration_dates(endDate)
         
-        option_df = self.option_service.get_all_expiration_data(strike_map)
+        option_df = self.option_service.get_all_expiration_data(strike_map,endDate)
         if option_df.empty:
             return option_df
         option_df = option_df.reset_index(drop=True)
@@ -65,16 +65,17 @@ class ReportGenerator:
         call_BE = strikes + option_df["ask"]
 
         ## functions in need of vectorization
-        def bsmc_get(symbol,expr,type,val_call,vall_put):
-            if type == "CALL":
-                return bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_call]
-            elif type == "PUT":
-                return bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),vall_put]
+        def bsmc_get(symbol,expr,typ,val_call,val_put):
+            if typ == "CALL":
+                out = bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_call]
+            elif typ == "PUT":
+                out =  bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_put]
+            return out
 
-        def get_breakeven(idx,type):
-            if type=="PUT":
+        def get_breakeven(idx,typ):
+            if typ=="PUT":
                 return put_BE[idx]
-            elif type=="CALL":
+            elif typ=="CALL":
                 return call_BE[idx]
         
         def get_percent_over(val1,val2):
@@ -85,6 +86,7 @@ class ReportGenerator:
             return val_sign*round(abs(val),2)
 
         vector_bsmc_get = np.vectorize(bsmc_get)
+        bsm_vals = vector_bsmc_get(symbols,exprs,types,'Call Value','Put Value')
         option_df["BSM Value"] = vector_bsmc_get(symbols,exprs,types,'Call Value','Put Value').round(2)
         option_df["Annual Vol"] = vector_bsmc_get(symbols,exprs,types,'Annual Vol','Annual Vol')
         option_df["Delta"] = vector_bsmc_get(symbols,exprs,types,'Call Delta','Put Delta')
