@@ -33,7 +33,10 @@ class DataCollector:
         above_ATM['Date Retrieved'] = [datetime.now() for i in range(len(above_ATM.index))]
         ATM['Date Retrieved'] = [datetime.now() for i in range(len(ATM.index))]
 
-        existing_data = pd.read_csv(self.filename)
+        try:
+            existing_data = pd.read_csv(self.filename)
+        except: pd.errors.EmptyDataError:
+            existing_data = pd.DataFrame()
 
         existing_data = existing_data.append(below_ATM)
         existing_data = existing_data.append(above_ATM)
