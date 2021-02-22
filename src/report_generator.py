@@ -44,7 +44,7 @@ class ReportGenerator:
     def get_multi_expiration_report(self,strike_map,endDate=None):
         spots = self.spot_service.get_latest()
 
-        expr_dates = self.option_service.get_expiration_dates()
+        expr_dates = self.option_service.get_expiration_dates(endDate)
         
         option_df = self.option_service.get_all_expiration_data(strike_map)
         if option_df.empty:

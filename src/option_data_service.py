@@ -1,6 +1,7 @@
 
 import yfinance as yf
 import pandas as pd
+from datetime import datetime
 
 class OptionDataService:
     desired_columns = ['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'inTheMoney', 'openInterest', 'impliedVolatility']
@@ -14,10 +15,14 @@ class OptionDataService:
     def get_expiration_dates(self,endDate=None):
         raw_data = {tkr:list(self.yf_tickers[tkr].options) for tkr in self.tickers}
         if endDate != None:
+            end_datetime = datetime.strptime(endDate,'%Y-%m-%d')
             for tkr in self.tickers:
-                for expr in raw_data[tkr]:
-                    if expr > endDate:
-                        del raw_data[tkr][raw_data[tkr].index(expr)]
+                for i in range(len(raw_data[tkr])):
+                    expr_date = datetime.strptime(raw_data[tkr][i],'%Y-%m-%d')
+                    if end_datetime < expr_date:
+                        raw_data[tkr][i]=0
+        for tkr in self.tickers:
+            raw_data[tkr] = list(filter(lambda x: x!=0,raw_data[tkr]))
         max_len = max([len(raw_data[tkr]) for tkr in self.tickers])
         raw_data = {tkr:raw_data[tkr]+ [0]*(max_len - len(raw_data[tkr])) for tkr in self.tickers}
         return pd.DataFrame(raw_data)

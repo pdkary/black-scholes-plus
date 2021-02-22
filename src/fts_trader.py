@@ -2,17 +2,50 @@ from datetime import datetime
 from src.report_generator import ReportGenerator
 
 class FTSTrader:
-    def __init__(self,tickers,rfr,percent_above_below):
-        self.tickers = tickers
-        self.rfr = rfr
-        self.percent_above_below = percent_above_below
-        self.rg = ReportGenerator(tickers,rfr)
+    @staticmethod
+    def create_call_bear_spread(tkr,expr,strike_low,strike_high,quantity):
+        returnString = dict()
+        key_low = FTSTrader.get_fts_option_key(tkr,'CALL',expr,strike_low)
+        key_high = FTSTrader.get_fts_option_key(tkr,'CALL',expr,strike_high)
+        returnString[key_high] = 'shortsale/'+ str(quantity)
+        returnString[key_low] = 'cashbuy/'+str(quantity)
+        return returnString
     
-    #should take about 2 minutes...
-    def refresh_data(self):
-        self.below_ATM = rg.get_ATM_multi_report_plus_x_percent(-self.percent_above_below)
-        self.above_ATM = rg.get_ATM_multi_report_plus_x_percent(self.percent_above_below)
-        self.ATM = rg.get_ATM_multi_report()
+    @staticmethod
+    def create_call_bull_spread(tkr,expr,strike_low,strike_high,quantity):
+        returnString = dict()
+        key_low = FTSTrader.get_fts_option_key(tkr,'CALL',expr,strike_low)
+        key_high = FTSTrader.get_fts_option_key(tkr,'CALL',expr,strike_high)
+        returnString[key_high] = 'cashbuy/' + str(quantity)
+        returnString[key_low] = 'shortsale/'+str(quantity)
+        return returnString
+    
+    @staticmethod
+    def create_put_bear_spread(tkr,expr,strike_low,strike_high,quantity):
+        returnString = dict()
+        key_low = FTSTrader.get_fts_option_key(tkr,'PUT',expr,strike_low)
+        key_high = FTSTrader.get_fts_option_key(tkr,'PUT',expr,strike_high)
+        returnString[key_high] = 'cashbuy/' + str(quantity)
+        returnString[key_low] = 'shortsale/'+str(quantity)
+        return returnString
+    
+    @staticmethod
+    def create_put_bull_spread(tkr,expr,strike_low,strike_high,quantity):
+        returnString = dict()
+        key_low = FTSTrader.get_fts_option_key(tkr,'PUT',expr,strike_low)
+        key_high = FTSTrader.get_fts_option_key(tkr,'PUT',expr,strike_high)
+        returnString[key_high] = 'shortsale/' + str(quantity)
+        returnString[key_low] = 'cashbuy/'+str(quantity)
+        return returnString
+    
+    @staticmethod
+    def create_iron_condor(tkr,expr,call_low,call_high,put_low,put_high,quantity):
+        returnStr = dict()
+        bear_call_spread = FTSTrader.create_call_bear_spread(tkr,expr,call_low,call_high,quantity)
+        bull_put_spread = FTSTrader.create_put_bull_spread(tkr,expr,put_low,put_high,quantity)
+        returnStr.update(bear_call_spread)
+        returnStr.update(bull_put_spread)
+        return returnStr
 
     @staticmethod
     def get_fts_option_key(tkr,type,expr,strike):
