@@ -35,7 +35,7 @@ class DataCollector:
 
         try:
             existing_data = pd.read_csv(self.filename)
-        except: pd.errors.EmptyDataError:
+        except pd.errors.EmptyDataError:
             existing_data = pd.DataFrame()
 
         existing_data = existing_data.append(below_ATM)
