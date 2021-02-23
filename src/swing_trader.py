@@ -83,11 +83,11 @@ class MovingAverageService:
         returnStr = dict()
         if invested_cash > 0:
             if tkr_vwap > 0 and bid > tkr_vwap*(1+self.avg_change[tkr]/2):
-                returnStr[tkr] = "cashsell"/round(tkr_vwap*invested_cash)
+                returnStr[tkr] = "cashsell/"+str(round(tkr_vwap*invested_cash))
         else:
             if self.is_within_MA(self,tkr,val):
                 if self.avg_change[tkr] > 0:
-                    returnStr[tkr] = "cashbuy/"round(self.avg_change[tkr]*available_cash)
+                    returnStr[tkr] = "cashbuy/"+str(round(self.avg_change[tkr]*available_cash))
 
     def is_within_MA(self,tkr,val):
         return self.MA[tkr]["Low MA"] < val and self.MA[tkr]["High MA"] > val
