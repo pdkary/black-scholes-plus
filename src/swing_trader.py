@@ -91,7 +91,8 @@ class MovingAverageService:
             if self.is_within_MA(tkr,ask):
                 if self.avg_change[tkr] > 0:
                     returnStr[tkr] = "cashbuy/"+str(round(self.avg_change[tkr]*available_cash))
-
+        return returnStr
+        
     def is_within_MA(self,tkr,val):
         tkr = tkr+"_Close"
         return self.MA["Low MA"][tkr] < val and self.MA["High MA"][tkr] > val
