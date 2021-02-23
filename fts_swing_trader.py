@@ -39,7 +39,7 @@ cTransCost=5
 ### ------------------------- End Weird FTS provided steup ------------------------------##
 returnStr = dict()
 for tkr in tickers:
-    log(qty[tkr])
+    log(str(qty[tkr]))
     tkr_Str = MAService.get_action(tkr,bid[tkr],ask[tkr],qty[tkr][cCashQty],qty[cCashAvailable],qty[cCVAP])
     returnStr.update(tkr_Str)
 
