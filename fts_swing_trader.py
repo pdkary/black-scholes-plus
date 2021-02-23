@@ -7,6 +7,8 @@ from src.swing_trader import MovingAverageService
 MAService = MovingAverageService(tickers,period="6mo")
 
 ### ----------------------------- Weird FTS provided steup ------------------------------##
+nArg=int(sys.argv[1])
+
 i=1
 bid=dict()
 ask=dict()
