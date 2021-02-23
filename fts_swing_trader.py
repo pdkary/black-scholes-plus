@@ -6,10 +6,6 @@ from src.swing_trader import MovingAverageService
 
 MAService = MovingAverageService(tickers,period="6mo")
 
-def log(text):
-    with open("logfile.txt",'a+') as f:
-        f.write(text)
-
 ### ----------------------------- Weird FTS provided steup ------------------------------##
 nArg=int(sys.argv[1])
 
@@ -39,7 +35,6 @@ cTransCost=5
 ### ------------------------- End Weird FTS provided steup ------------------------------##
 returnStr = dict()
 for tkr in tickers:
-    log(str(qty[tkr]))
     tkr_Str = MAService.get_action(tkr,bid[tkr],ask[tkr],qty[tkr][cCashQty],qty[tkr][cCashAvailable],qty[tkr][cCVAP])
     returnStr.update(tkr_Str)
 

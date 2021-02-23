@@ -11,6 +11,9 @@ class MovingAverageService:
         self.interval = "1d"
         self.refresh_data()
 
+    def log(self,var):
+        with open("MAService.log","a+") as f:
+            f.write(str(var))
 
     def load_data(self):
         tkr_str = " ".join(self.tickers)
@@ -85,11 +88,10 @@ class MovingAverageService:
             if tkr_vwap > 0 and bid > tkr_vwap*(1+self.avg_change[tkr]/2):
                 returnStr[tkr] = "cashsell/"+str(round(tkr_vwap*invested_cash))
         else:
-            if self.is_within_MA(self,tkr,val):
+            if self.is_within_MA(tkr,ask):
                 if self.avg_change[tkr] > 0:
                     returnStr[tkr] = "cashbuy/"+str(round(self.avg_change[tkr]*available_cash))
 
     def is_within_MA(self,tkr,val):
+        tkr = tkr+"_Close"
         return self.MA["Low MA"][tkr] < val and self.MA["High MA"][tkr] > val
-
-        
