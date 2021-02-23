@@ -40,7 +40,7 @@ cTransCost=5
 returnStr = dict()
 for tkr in tickers:
     log(str(qty[tkr]))
-    tkr_Str = MAService.get_action(tkr,bid[tkr],ask[tkr],qty[tkr][cCashQty],qty[cCashAvailable],qty[cCVAP])
+    tkr_Str = MAService.get_action(tkr,bid[tkr],ask[tkr],qty[tkr][cCashQty],qty[tkr][cCashAvailable],qty[tkr][cCVAP])
     returnStr.update(tkr_Str)
 
 print(returnStr)
