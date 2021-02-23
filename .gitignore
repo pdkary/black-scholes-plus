@@ -4,3 +4,5 @@ src/__pycache__/
 reports/*
 .vscode/
 collected_data.csv
+fix_data.py
+options_to_buy

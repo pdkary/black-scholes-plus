@@ -8,6 +8,7 @@ Ok so finding historical option data online is either really hard or really expe
 So for training, im gonna let this run on a raspberry pi for a few months
 """
 class DataCollector:
+    df_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest','Delta','Gamma','Theta','Vega','Rho','impliedVolatility', 'Annual Vol']
     """
     Tickers: list of tickers who's options you want to trade
     filename: output csv
@@ -42,5 +43,6 @@ class DataCollector:
         existing_data = existing_data.append(above_ATM)
         existing_data = existing_data.append(ATM)
 
+        existing_data = existing_data[self.df_cols]
         existing_data = existing_data.reset_index(drop=True)
         existing_data.to_csv(self.filename)
