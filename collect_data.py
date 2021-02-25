@@ -1,4 +1,4 @@
-from src.data_collector import DataCollector
+from src.data.data_collector import DataCollector
 from datetime import datetime
 tickers = ['AAPL', 'AMD', 'AMGN', 'AMZN', 'CSCO', 'FB', 'GOOG','IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP']
 filename = "collected_data.csv"

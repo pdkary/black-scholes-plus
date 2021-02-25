@@ -2,7 +2,7 @@ import sys
 tickers = ['AAPL', 'AMD', 'AMZN', 'CSCO', 'FB', 'GOOG','IBM', 'INTC', 'MSFT', 'MU', 'NFLX', 'NVDA', 'SHOP']
 frequency = 120
 
-from src.swing_trader import MovingAverageService
+from src.traders.swing_trader import MovingAverageService
 
 MAService = MovingAverageService(tickers,period="6mo")
 
