@@ -28,32 +28,31 @@ class ReportGenerator:
         s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
-    def get_ATM_multi_report(self,endDate=None):
-        return self.get_ATM_multi_report_plus_x(0,endDate)
+    def get_ATM_multi_report(self,dateRange=None):
+        return self.get_ATM_multi_report_plus_x(0,dateRange)
 
-    def get_ATM_multi_report_plus_x(self,x,endDate=None):
+    def get_ATM_multi_report_plus_x(self,x,dateRange=None):
         latest = self.spot_service.get_latest()
         s_map = {t:round(latest[t]+x,0) for t in self.tickers}
-        return self.get_multi_expiration_report(s_map,endDate)
+        return self.get_multi_expiration_report(s_map,dateRange)
 
-    def get_ATM_multi_report_plus_x_percent(self,x,endDate=None):
+    def get_ATM_multi_report_plus_x_percent(self,x,dateRange=None):
         latest = self.spot_service.get_latest()
         s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
-        return self.get_multi_expiration_report(s_map,endDate)
+        return self.get_multi_expiration_report(s_map,dateRange)
     
-    def get_multi_expiration_report(self,strike_map,endDate=None):
+    def get_multi_expiration_report(self,strike_map,expr_map):
         spots = self.spot_service.get_latest()
-
-        expr_dates = self.option_service.get_expiration_dates(endDate)
+        option_df = self.option_service.get_by_expr_map_and_strike_map(expr_map,strike_map)
         
-        option_df = self.option_service.get_all_expiration_data(strike_map,endDate)
         if option_df.empty:
             return option_df
+
         option_df = option_df.reset_index(drop=True)
         
         strikes = [strike_map[x] for x in self.tickers]
         vol = self.spot_service.get_stdev()
-        bsmc_data = BSM_Calculator.bsm_calculation(self.tickers,spots,strikes,vol,0.012,0,expr_dates)
+        bsmc_data = BSM_Calculator.bsm_calculation(self.tickers,spots,strike_map,vol,0.012,0,expr_map)
 
         idxs = option_df.index
         symbols = option_df['contractSymbol'].apply(lambda x:x[0:x.index("2")])
@@ -70,7 +69,7 @@ class ReportGenerator:
                 out = bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_call]
             elif typ == "PUT":
                 out =  bsmc_data.loc[((bsmc_data['expiration']==expr) & (bsmc_data['symbol']==symbol)),val_put]
-            return out
+            return out.values[0]
 
         def get_breakeven(idx,typ):
             if typ=="PUT":
@@ -86,7 +85,7 @@ class ReportGenerator:
             return val_sign*round(abs(val),2)
 
         vector_bsmc_get = np.vectorize(bsmc_get)
-        bsm_vals = vector_bsmc_get(symbols,exprs,types,'Call Value','Put Value')
+        option_df["contractSymbol"] = symbols
         option_df["BSM Value"] = vector_bsmc_get(symbols,exprs,types,'Call Value','Put Value').round(2)
         option_df["Annual Vol"] = vector_bsmc_get(symbols,exprs,types,'Annual Vol','Annual Vol')
         option_df["Delta"] = vector_bsmc_get(symbols,exprs,types,'Call Delta','Put Delta')
@@ -103,13 +102,13 @@ class ReportGenerator:
     
     def get_report(self, expiration_date, strike_map):
         spots = self.spot_service.get_latest()
-        option_df = self.option_service.get_data(expiration_date, strike_map)
+        option_df = self.option_service.get_by_expr_map_and_strike_map(expiration_date, strike_map)
         if option_df.empty:
             return option_df
         strikes = np.array([strike_map[x] for x in self.tickers])
         expr_dates = pd.Series([expiration_date]*len(self.tickers),index=self.tickers)
         
-        bsmc_data = BSM_Calculator.get_single_expiration(
+        bsmc_data = BSM_Calculator.get_by_single_strike_and_expr(
             tkrs=self.tickers,
             spot=spots, 
             vol=self.spot_service.get_stdev(), 

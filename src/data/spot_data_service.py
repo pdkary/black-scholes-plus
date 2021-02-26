@@ -1,6 +1,7 @@
+#! /usr/bin/env python
 import yfinance as yf
 import numpy as np
-from src.utils.time_helpers import *
+
 from pandas import MultiIndex
 import pandas as pd
 

@@ -34,3 +34,5 @@ def interval_to_timedelta(interval:str):
     elif typ=="y":
         return timedelta(weeks=52*val)
 
+def timestamp_to_string(stmp):
+    return stmp.strftime("%Y-%m-%d")

@@ -6,36 +6,37 @@ from src.utils.time_helpers import *
 from src.data.spot_data_service import SpotDataService
 from src.data.option_data_service import OptionDataService
 
-
 class BSM_Calculator:
     """
-    tkrs:       (1xN) array of ticker indicies
-    strikes:    (1xN) corresponding strike prices
-    vol:        (1xN) corresponding annual volitility
-    rfr:        (scalar) risk free rate
-    div_yield:  (scalar) divident yield
-    expr_dates: (Nx?) matrix of tkr: (1x?) array of expiration dates
+    Now we will have multiple expr dates, and strike prices for earch tkr, so we will need additional rows in our dataframe
     """
     @staticmethod
-    def bsm_calculation(tkrs,spot,strike,vol,rfr,div_yield,expr_dates):
+    def bsm_calculation(tkrs,spot,strikes_map,vol,rfr,div_yield,exprs_map):
         bsm_data = pd.DataFrame(dtype=object)
-        for i in range(len(expr_dates.index)):
-            expr_i = expr_dates.loc[expr_dates.index == i]
-            data_i = BSM_Calculator.get_single_expiration(tkrs,spot,strike,vol,rfr,div_yield,expr_i)
-            bsm_data = bsm_data.append(data_i)
-        return bsm_data.loc[bsm_data["expiration"] != 0].reset_index(drop=True)
+        i = 0
+        for tkr in tkrs:
+            for s in strikes_map[tkr]:
+                for expr in exprs_map[tkr]:
+                    tmp = pd.DataFrame({"symbol":tkr,"spot":spot[tkr],"strike":s,"vol":vol[tkr],"rfr":rfr,"div_yield":div_yield,"expr_date":expr},index=[i])
+                    bsm_data = bsm_data.append(tmp)
+                    i+=1
+        return BSM_Calculator.bsm_from_dataframe(bsm_data)
 
     """
-    spots:      (1xN) spot prices (tkr:spot)
-    strike:     (1xN) spot prices (tkr:strike)
-    vol:        (1xN) volatility  (tkr:vol)
-    rfr:        (1x1) risk free yield
-    div_yield   (1x1) div yield
-    expr_date   (1xN) expr_date   (tkr:expr)
+    Here, each row has the following structure
+    tkr|spot|strike|vol|rfr|div_yield|expr_date|   
     """
     @staticmethod
-    def get_single_expiration(tkrs,spot,strike,vol,rfr,div_yield,expr_dates):
-        t_to_expr = expr_dates.apply(np.vectorize(get_time_to_expiry))
+    def bsm_from_dataframe(df):
+        tkrs = list(df['symbol'])
+        spot = df['spot']
+        strike = df['strike']
+        vol = df['vol']
+        rfr = df['rfr']
+        div_yield = df['div_yield']
+        expr_dates = df['expr_date']
+        t_to_expr = expr_dates.apply(get_time_to_expiry)
+
         d1 = (np.log(spot/strike) + t_to_expr*(rfr-div_yield+vol*vol/2))/(vol*np.sqrt(t_to_expr))
 
         d2 = d1 - vol*np.sqrt(t_to_expr)
@@ -50,8 +51,6 @@ class BSM_Calculator:
         PV = strike*Kr*N(-d2) - spot*Kq*N(-d1)
         Cdelta = Kq*N(d1)
         Pdelta = Kq*(N(d1)-1)
-        rfr = np.array([rfr])
-        div_yield = np.array([div_yield])
 
         Gamma  = Kq/(spot*vol*np.sqrt(t_to_expr))*Nprime(d1)
 
@@ -67,16 +66,18 @@ class BSM_Calculator:
         
         bsm_data = pd.DataFrame()
         bsm_data["symbol"] = tkrs
-        bsm_data["expiration"] = expr_dates[tkrs].values[0]
-        bsm_data["Call Value"] = CV[tkrs].values[0]
-        bsm_data["Put Value"] = PV[tkrs].values[0]
-        bsm_data["Call Delta"] = Cdelta[tkrs].values[0]
-        bsm_data["Put Delta"] = Pdelta[tkrs].values[0]
-        bsm_data["Gamma"] = Gamma[tkrs].values[0]
-        bsm_data["Call Theta"] = Ctheta[tkrs].values[0]
-        bsm_data["Put Theta"] = Ptheta[tkrs].values[0]
-        bsm_data["Vega"] = vega[tkrs].values[0]
-        bsm_data["Call Rho"] = Crho[tkrs].values[0]
-        bsm_data["Put Rho"] = Prho[tkrs].values[0]
+        bsm_data["spot"] = spot.values
+        bsm_data["strike"] = strike.values
+        bsm_data["expiration"] = expr_dates.values
+        bsm_data["Call Value"] = CV.values
+        bsm_data["Put Value"] = PV.values
+        bsm_data["Call Delta"] = Cdelta.values
+        bsm_data["Put Delta"] = Pdelta.values
+        bsm_data["Gamma"] = Gamma.values
+        bsm_data["Call Theta"] = Ctheta.values
+        bsm_data["Put Theta"] = Ptheta.values
+        bsm_data["Vega"] = vega.values
+        bsm_data["Call Rho"] = Crho.values
+        bsm_data["Put Rho"] = Prho.values
         bsm_data["Annual Vol"] = vol.values
         return bsm_data
