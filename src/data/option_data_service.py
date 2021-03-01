@@ -47,9 +47,9 @@ class OptionDataService:
 
     def get_by_expiration_and_strike_map(self,expiration_date,strike_map):
         expr_map = {t:expiration_date for t in self.tickers}
-        return self.get_by_expr_map_and_strike_map(expiration_date,strike_map)
+        return self.get_by_expr_map_and_strike_map(expr_map,strike_map)
 
-    def get_by_expiration_range_and_strike_map(self,dateRange,strike_map,):
+    def get_by_expiration_range_and_strike_map(self,dateRange,strike_map):
         output_df = pd.DataFrame()
         exp_dates = self.get_expiration_dates(dateRange)
         for t in self.tickers:
@@ -61,10 +61,11 @@ class OptionDataService:
         return output_df
 
      ## returns a matrix of (NxM) Tkrs: [expr_dates (padded with 0's to the longest entry)]
+    
     def get_expiration_dates(self,dateRange=None):
         raw_data = {tkr:list(self.yf_tickers[tkr].options) for tkr in self.tickers}
         if dateRange is not None:
-            start_datetime = datetime.strptime(dateRange[1],'%Y-%m-%d')
+            start_datetime = datetime.strptime(dateRange[0],'%Y-%m-%d')
             end_datetime = datetime.strptime(dateRange[1],'%Y-%m-%d')
             for tkr in self.tickers:
                 for i in range(len(raw_data[tkr])):

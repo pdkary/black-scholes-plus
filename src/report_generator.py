@@ -28,40 +28,59 @@ class ReportGenerator:
         s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
         return self.get_report(expiration_date,s_map)
 
-    def get_ATM_multi_report(self,expiration_map=None):
-        return self.get_ATM_multi_report_plus_x(0,expiration_map)
+    def get_ATM_multi_report(self,expr_map=None,dateRange=None):
+        return self.get_ATM_multi_report_plus_x(0,expr_map=expr_map,dateRange=dateRange)
 
-    def get_ATM_multi_report_plus_x(self,x,expiration_map=None):
+    def get_ATM_multi_report_plus_x(self,x,expr_map=None,dateRange=None):
         latest = self.spot_service.get_latest()
-        s_map = {t:round(latest[t]+x,0) for t in self.tickers}
-        return self.get_multi_expiration_report(s_map,expiration_map)
+        s_map = {t:round(latest[t]+float(x),0) for t in self.tickers}
+        return self.get_multi_expiration_report(s_map,expr_map=expr_map,dateRange=dateRange)
 
-    def get_ATM_multi_report_plus_x_percent(self,x,expiration_map=None):
+    def get_ATM_multi_report_plus_x_percent(self,x,expr_map=None,dateRange=None):
         latest = self.spot_service.get_latest()
         s_map = {t:round(latest[t]*(1+x),0) for t in self.tickers}
-        return self.get_multi_expiration_report(s_map,expiration_map)
+        return self.get_multi_expiration_report(s_map,expr_map=expr_map,dateRange=dateRange)
     
-    def get_multi_expiration_report(self,strike_map,expr_map):
-        spots = self.spot_service.get_latest()
-        option_df = self.option_service.get_by_expr_map_and_strike_map(expr_map,strike_map)
+    def get_multi_expiration_report(self,strike_map,expr_map=None,dateRange=None):
+        if expr_map is None and dateRange is None:
+            raise ValueError("You must specify either an expiration map or a date range")
+        
+        if expr_map is not None and dateRange is not None:
+            raise ValueError("You can specify only an expiration map or a date range, not both")
+        else:
+            if expr_map is not None:
+                option_df = self.option_service.get_by_expr_map_and_strike_map(expr_map,strike_map)
+            elif dateRange is not None:
+                option_df = self.option_service.get_by_expiration_range_and_strike_map(dateRange,strike_map)
         
         if option_df.empty:
             return option_df
-
         option_df = option_df.reset_index(drop=True)
         
+        spots = self.spot_service.get_latest()
         strikes = [strike_map[x] for x in self.tickers]
         vol = self.spot_service.get_stdev()
-        bsmc_data = BSM_Calculator.bsm_calculation(self.tickers,spots,strike_map,vol,0.012,0,expr_map)
 
         idxs = option_df.index
         symbols = option_df['contractSymbol'].apply(lambda x:x[0:x.index("2")])
         types = option_df['type']
         exprs = option_df['expiration']
         strikes = option_df['strike']
+        if expr_map is None:
+            expr_map = {}
+            for x in range(len(exprs)):
+                sym = symbols.loc[symbols.index==x].values[0]
+                expr = exprs.loc[exprs.index==x].values[0]
+                if sym not in expr_map.keys():
+                    expr_map[sym] = [expr]
+                else:
+                    expr_map[sym].append(expr)
+        
         
         put_BE = strikes - option_df["ask"]
         call_BE = strikes + option_df["ask"]
+        
+        bsmc_data = BSM_Calculator.bsm_calculation(self.tickers,spots,strike_map,vol,0.012,0,expr_map)
 
         ## functions in need of vectorization
         def bsmc_get(symbol,expr,typ,val_call,val_put):
@@ -102,18 +121,18 @@ class ReportGenerator:
     
     def get_report(self, expiration_date, strike_map):
         spots = self.spot_service.get_latest()
-        option_df = self.option_service.get_by_expr_map_and_strike_map(expiration_date, strike_map)
+        option_df = self.option_service.get_by_expiration_and_strike_map(expiration_date, strike_map)
         if option_df.empty:
             return option_df
-        strikes = np.array([strike_map[x] for x in self.tickers])
-        expr_dates = pd.Series([expiration_date]*len(self.tickers),index=self.tickers)
         
-        bsmc_data = BSM_Calculator.get_by_single_strike_and_expr(
+        expr_map = {t:[expiration_date] for t in self.tickers}
+        
+        bsmc_data = BSM_Calculator.bsm_calculation(
             tkrs=self.tickers,
             spot=spots, 
             vol=self.spot_service.get_stdev(), 
-            strike=strikes, 
-            expr_dates=expr_dates, 
+            strikes_map=strike_map, 
+            exprs_map=expr_map, 
             rfr=self.rfr,
             div_yield=0)
 

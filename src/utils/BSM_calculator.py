@@ -2,6 +2,7 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 from scipy.stats import norm
+from numbers import Number
 from src.utils.time_helpers import *
 from src.data.spot_data_service import SpotDataService
 from src.data.option_data_service import OptionDataService
@@ -15,11 +16,18 @@ class BSM_Calculator:
         bsm_data = pd.DataFrame(dtype=object)
         i = 0
         for tkr in tkrs:
-            for s in strikes_map[tkr]:
+            if type(strikes_map[tkr])==list:
+                for s in strikes_map[tkr]:
+                    for expr in exprs_map[tkr]:
+                        tmp = pd.DataFrame({"symbol":tkr,"spot":spot[tkr],"strike":s,"vol":vol[tkr],"rfr":rfr,"div_yield":div_yield,"expr_date":expr},index=[i])
+                        bsm_data = bsm_data.append(tmp)
+                        i+=1
+            elif isinstance(strikes_map[tkr],Number):
+                s = strikes_map[tkr]
                 for expr in exprs_map[tkr]:
-                    tmp = pd.DataFrame({"symbol":tkr,"spot":spot[tkr],"strike":s,"vol":vol[tkr],"rfr":rfr,"div_yield":div_yield,"expr_date":expr},index=[i])
-                    bsm_data = bsm_data.append(tmp)
-                    i+=1
+                        tmp = pd.DataFrame({"symbol":tkr,"spot":spot[tkr],"strike":s,"vol":vol[tkr],"rfr":rfr,"div_yield":div_yield,"expr_date":expr},index=[i])
+                        bsm_data = bsm_data.append(tmp)
+                        i+=1
         return BSM_Calculator.bsm_from_dataframe(bsm_data)
 
     """
@@ -28,6 +36,7 @@ class BSM_Calculator:
     """
     @staticmethod
     def bsm_from_dataframe(df):
+        print(df)
         tkrs = list(df['symbol'])
         spot = df['spot']
         strike = df['strike']

@@ -3,3 +3,5 @@ pandas
 scipy
 numpy
 datetime
+flask
+flask_jsonpify
