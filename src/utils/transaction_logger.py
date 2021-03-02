@@ -1,10 +1,9 @@
 import pandas as pd
-
-
+import numpy as np
 class TransactionTypes:
     SECURITY = "security"
-    PUT = "put"
-    CALL = "call"
+    PUT = "PUT"
+    CALL = "CALL"
 
 
 class TransactionActions:
@@ -91,10 +90,18 @@ class TranactionLogger:
     def get_all_options_by_tkr(self, tkr):
         return self.data.loc[(self.data['symbol'] == tkr) & (self.data['type'] != TransactionTypes.SECURITY)]
     
-    def get_total_securities_holdings(self):
-        prices = self.data.loc[(self.data['type']==TransactionTypes.SECURITY)]['price']
-        qty = self.data.loc[(self.data['type']==TransactionTypes.SECURITY)]['qty']
-        return sum(prices*qty)
+    def get_weighted_portfolio(self):
+        def get_value(t,a,p,q):
+            m = -1 if a=='shortsale' else 1
+            if t=="security":
+                return m*p*q
+            if t=='CALL' or t=='PUT':
+                return 100*m*p*q
+
+        self.data['invested'] = np.vectorize(get_value)(self.data['type'],self.data['action'],self.data['price'],self.data['qty'])
+        total_val = self.data['invested'].sum()
+        self.data['weight'] = np.vectorize(lambda a,b:a/b)(self.data['invested'],total_val)
+        return self.data
 
     def get_all_tkrs(self):
         return list(set(self.data['symbol']))

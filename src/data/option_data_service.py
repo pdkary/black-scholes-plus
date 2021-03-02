@@ -3,6 +3,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 from numbers import Number
+from numpy import uint8
 
 class OptionDataService:
     desired_columns = ['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'inTheMoney', 'openInterest', 'impliedVolatility']
@@ -89,9 +90,11 @@ class OptionDataService:
         except ValueError as e:
             print("failed on ({},{},{})".format(ticker,expiration,strike))
             return output_df
+
         call_chain = option_chain.calls
         call_row = call_chain.loc[call_chain['strike']==strike]
-        call_row = call_row.loc[call_row["openInterest"]!=0]
+        
+        # call_row = call_row.loc[call_row["openInterest"]!=0]
         call_row = call_row[self.desired_columns]
         call_row['expiration'] = [expiration for i in range(len(call_row['bid']))]
         call_row['type'] = ['CALL' for i in range(len(call_row['bid']))]
@@ -103,11 +106,8 @@ class OptionDataService:
         put_row['expiration'] = [expiration for i in range(len(put_row['bid']))]
         put_row['type'] = ['PUT' for i in range(len(put_row['bid']))]
 
-        if not call_row.empty:
-            output_df = output_df.append(call_row)
-        if not put_row.empty:
-            output_df = output_df.append(put_row)
-        
+        output_df = output_df.append(call_row)
+        output_df = output_df.append(put_row)
         return output_df
     
     

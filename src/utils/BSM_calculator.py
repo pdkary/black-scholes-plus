@@ -36,7 +36,6 @@ class BSM_Calculator:
     """
     @staticmethod
     def bsm_from_dataframe(df):
-        print(df)
         tkrs = list(df['symbol'])
         spot = df['spot']
         strike = df['strike']

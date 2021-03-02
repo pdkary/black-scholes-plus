@@ -1,4 +1,4 @@
-from utils.PortfolioCalculator import PortfolioCalculator, TransactionActions, TransactionTypes
+from src.utils.PortfolioCalculator import PortfolioCalculator, TransactionActions, TransactionTypes
 from datetime import datetime
 
 
@@ -21,5 +21,16 @@ pc.buy_call("FB", format_date("2021-02-23,12:25:32 PM"), expr_date, 7.05, 280, 1
 pc.buy_call("GOOG", format_date("2021-02-25,1:06:48 PM"),expr_date,32.60,2200,10)
 pc.buy_call("NFLX", format_date("2021-02-25,1:23:12 PM"),expr_date,28.9,550,10)
 
+pc.buy_security("SHOP",format_date("2021-03-01,11:52:11 AM"),1660.19,30)
+pc.buy_security("SHOP",format_date("2021-03-01,11:52:36 AM"),1661.38,30)
+
+pc.buy_put("SHOP",format_date("2021-03-02,9:30:00 AM"),expr_date,253.3,1900,30)
+
 pf = pc.get_option_profit_function('FB')
-pc.analyze_portfolio()
+report = pc.analyze_portfolio()
+print(report)
+total_sec = report.loc[report['type']=='security']['invested'].sum()
+beta_times_invested = (report.loc[report['type']=='security']['beta']*report.loc[report['type']=='security']['invested']).sum()
+print("Securities Beta: {}".format(beta_times_invested/total_sec))
+print("Portfolio Beta: {}".format(report['weighted beta'].sum()))
+print("Portfolio Delta: {}".format(report['% delta'].sum()/100.0))

@@ -4,7 +4,7 @@ from src.utils.BSM_calculator import BSM_Calculator
 from src.utils.time_helpers import get_time_to_expiry
 import numpy as np
 import pandas as pd
-from math import ceil,nan
+from math import ceil
 
 class ReportGenerator:
     display_cols = ['contractSymbol','expiration','type','spot','strike','BSM Value','BSM% over ask', 'lastPrice', 'bid', 'ask', 'B/E','d% for BE','openInterest','Delta','Gamma','Theta','Vega','Rho','impliedVolatility', 'Annual Vol']
@@ -54,6 +54,7 @@ class ReportGenerator:
                 option_df = self.option_service.get_by_expiration_range_and_strike_map(dateRange,strike_map)
         
         if option_df.empty:
+            print("Option service returned nothing")
             return option_df
         option_df = option_df.reset_index(drop=True)
         
@@ -67,14 +68,11 @@ class ReportGenerator:
         exprs = option_df['expiration']
         strikes = option_df['strike']
         if expr_map is None:
-            expr_map = {}
+            expr_map = {tkr:[] for tkr in self.tickers}
             for x in range(len(exprs)):
                 sym = symbols.loc[symbols.index==x].values[0]
                 expr = exprs.loc[exprs.index==x].values[0]
-                if sym not in expr_map.keys():
-                    expr_map[sym] = [expr]
-                else:
-                    expr_map[sym].append(expr)
+                expr_map[sym].append(expr)
         
         
         put_BE = strikes - option_df["ask"]
@@ -98,7 +96,7 @@ class ReportGenerator:
         
         def get_percent_over(val1,val2):
             if val2==0:
-                return nan
+                return 0
             val = (val1-val2)/val2
             val_sign = val/abs(val)
             return val_sign*round(abs(val),2)
