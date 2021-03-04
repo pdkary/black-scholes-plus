@@ -3,18 +3,15 @@ from flask import Flask,request,jsonify,json
 from flask_jsonpify import jsonpify
 from src.report_generator import ReportGenerator
 from flask_cors import CORS, cross_origin
-from math import isnan
-from numpy import vectorize
+
 app = Flask(__name__)
 cors = CORS(app)
 tickers = []
 rg = None
-def nan_to_zero(x):
-    return 0 if isnan(x) else x
 
 def dataframe_to_json(df):
+    df = df.fillna(0)
     df_list = df.values.tolist()
-    df_list = vectorize(nan_to_zero)(df_list)
     JSONP_data = jsonpify(df_list)
     return JSONP_data
 
