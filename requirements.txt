@@ -6,3 +6,4 @@ datetime
 flask
 flask_jsonpify
 flask_cors
+gunicorn

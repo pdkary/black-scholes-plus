@@ -1,14 +1,19 @@
+
 from flask import Flask,request,jsonify,json
 from flask_jsonpify import jsonpify
 from src.report_generator import ReportGenerator
 from flask_cors import CORS, cross_origin
+from math import isnan
 app = Flask(__name__)
 cors = CORS(app)
 tickers = []
 rg = None
+def nan_to_zero(x):
+    return 0 if isnan(x) else x
 
 def dataframe_to_json(df):
     df_list = df.values.tolist()
+    df_list = np.vectorize(nan_to_zero)(df_list)
     JSONP_data = jsonpify(df_list)
     return JSONP_data
 
@@ -91,6 +96,6 @@ def request_bsm():
             strike_map = content['strike-map']
             df = rg.get_multi_expiration_report(strike_map,expr_date_map,date_range).round(2)
             return dataframe_to_json(df)
-   
-if __name__ == '__main__':
-    app.run(host= '127.0.0.1',debug=True)
+
+if __name__=="__main__":
+    app.run()
